@@ -1,6 +1,11 @@
-package com.example.myfirstapp;
+package com.example.CS9396_project3;
 
 import java.util.ArrayList;
+
+import com.example.myfirstapp.R;
+import com.example.myfirstapp.R.id;
+import com.example.myfirstapp.R.layout;
+import com.example.myfirstapp.R.menu;
 
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
