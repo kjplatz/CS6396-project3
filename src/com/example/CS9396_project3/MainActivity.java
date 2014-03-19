@@ -11,32 +11,47 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.os.Build;
 
 public class MainActivity extends ActionBarActivity {
 	
-	protected ArrayList<String> getBluetoothDevices() {
-		ArrayList<String> list = new ArrayList<String>();
+	private BroadcastReceiver mReceiver;
+	
+	public void getBluetoothDevices(View v) {
+		BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
 		
-		BluetoothAdapter BA;
-		BA = BluetoothAdapter.getDefaultAdapter();
+		Log.i("getBluetoothDevices()", "Invoking...");
 		
 		Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 		startActivityForResult(turnOn, 0);
 		
-		return list;
+		ListView listView = (ListView)findViewById(R.id.listview);
+		ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
+		
+		adapter.clear();
+		
+		BA.startDiscovery();
+		Log.i("getBluetoothDevices()", "Returning...");
+		return;
 	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.i("onCreate()", "Invoking...");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
@@ -45,8 +60,43 @@ public class MainActivity extends ActionBarActivity {
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
 		
+		mReceiver = new BroadcastReceiver() {
+			public void onReceive(Context context, Intent intent ) {
+				Log.i("onReceive", "invoking...");
+			    String action = intent.getAction();
+			    Log.i("onReceive", "got action "+action );
+			    if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+			    	BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+			    	String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
+			    	short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0);
+			    	
+			    	name = name + " : " + rssi + "dB";
+			    	Log.i("onReceive", "Found device "+name );
+			    	
+			    	ListView listView = (ListView)findViewById(R.id.listview);
+			    	ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
+			    	adapter.add(name);
+
+			    }
+			    Log.i("onReceive", "exiting...");
+			}
+		};
+		
+		IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND );
+		registerReceiver( mReceiver, filter );
+		
+		BluetoothAdapter BA;
+		BA = BluetoothAdapter.getDefaultAdapter();
+		if ( BA != null && !BA.isEnabled() ) {
+		    BA.enable();
+		}
+		
 		final ListView listview = (ListView) findViewById(R.id.listview);
-		final ArrayList<String> list = new ArrayList<String>();
+		ArrayList<String> list = new ArrayList<String>();
+		
+		ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1, list );
+		listview.setAdapter(itemsAdapter);
+		Log.i("onCreate()", "Exiting...");
 	}
 
 	@Override
