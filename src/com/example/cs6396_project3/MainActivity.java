@@ -119,20 +119,23 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
+				BluetoothDevice bt = btDevs.get((int)id);
 		        Log.i( "listItemSelected()", "id = "+id );
 		        Log.i( "listItemSelected()", ((TextView)view).getText().toString() );	
-		        Log.i( "listItemSelected()", btDevs.get((int)id).getName());
+		        Log.i( "listItemSelected()", bt.getName());
+		        Log.i( "listItemSelected()", ""+btDevs.get((int)id).getUuids().length );
 		        Log.i( "listItemSelected()", btDevs.get((int)id).getUuids()[0].getUuid().toString());
-		        UUID uuid =  btDevs.get((int)id).getUuids()[0].getUuid();
+		        UUID uuid =  bt.getUuids()[0].getUuid();
 		        try {
-		        	BluetoothSocket btSock = btDevs.get((int)id).createInsecureRfcommSocketToServiceRecord(uuid);
+		        	BluetoothSocket btSock = bt.createRfcommSocketToServiceRecord(uuid);
+		        	btSock.connect();
 		        	OutputStream os = btSock.getOutputStream();
 		        	OutputStreamWriter ow = new OutputStreamWriter(os);
 		        	BufferedWriter writer = new BufferedWriter(ow);
 		        	
-		        	writer.write("put 2 100");
+		        	writer.write("put 2 100\n");
 		        	Thread.sleep(1000);
-		        	writer.write("put 2 0" );
+		        	writer.write("put 2 0\n" );
 		        } catch (IOException e ) {
 		        	Log.e("listItemsSelected()", "Error opening BluetoothSocket"+e.toString());
 		        } catch (InterruptedException e ) {
