@@ -2,11 +2,25 @@ package com.example.cs6396_project3;
 
 import com.example.cs6396_project3.R;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+
+
+
+import java.util.UUID;
+
+
+
+
+
 
 //import android.R;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -20,11 +34,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class MainActivity extends ActionBarActivity {
     private BroadcastReceiver mReceiver;
+    private ArrayList<BluetoothDevice> btDevs;
 
     public void getBluetoothDevices(View v) {
             BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
@@ -38,12 +55,14 @@ public class MainActivity extends ActionBarActivity {
             ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
 
             adapter.clear();
+            btDevs = new ArrayList<BluetoothDevice>();
 
             BA.startDiscovery();
             Log.i("getBluetoothDevices()", "Returning...");
             return;
     }
 	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
         Log.i("onCreate()", "Invoking...");
@@ -73,6 +92,7 @@ public class MainActivity extends ActionBarActivity {
                     ListView listView = (ListView)findViewById(R.id.listview);
                     ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
                     adapter.add(name);
+                    btDevs.add(device);
 
                 }
                 Log.i("onReceive", "exiting...");
@@ -93,6 +113,34 @@ public class MainActivity extends ActionBarActivity {
 
         ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1, list );
         listview.setAdapter(itemsAdapter);
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener()  {
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+		        Log.i( "listItemSelected()", "id = "+id );
+		        Log.i( "listItemSelected()", ((TextView)view).getText().toString() );	
+		        Log.i( "listItemSelected()", btDevs.get((int)id).getName());
+		        Log.i( "listItemSelected()", btDevs.get((int)id).getUuids()[0].getUuid().toString());
+		        UUID uuid =  btDevs.get((int)id).getUuids()[0].getUuid();
+		        try {
+		        	BluetoothSocket btSock = btDevs.get((int)id).createInsecureRfcommSocketToServiceRecord(uuid);
+		        	OutputStream os = btSock.getOutputStream();
+		        	OutputStreamWriter ow = new OutputStreamWriter(os);
+		        	BufferedWriter writer = new BufferedWriter(ow);
+		        	
+		        	writer.write("put 2 100");
+		        	Thread.sleep(1000);
+		        	writer.write("put 2 0" );
+		        } catch (IOException e ) {
+		        	Log.e("listItemsSelected()", "Error opening BluetoothSocket"+e.toString());
+		        } catch (InterruptedException e ) {
+		        	Log.e("listItemsSelected()", "Error sleeping"+e.toString() );
+		        }
+			}
+        	
+        } );
         Log.i("onCreate()", "Exiting...");
 	}
 
