@@ -17,6 +17,7 @@ import java.util.UUID;
 
 
 
+import android.annotation.TargetApi;
 //import android.R;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -117,30 +118,38 @@ public class MainActivity extends ActionBarActivity {
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener()  {
 
 			@Override
+			@TargetApi(15)
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				BluetoothDevice bt = btDevs.get((int)id);
-		        Log.i( "listItemSelected()", "id = "+id );
-		        Log.i( "listItemSelected()", ((TextView)view).getText().toString() );	
-		        Log.i( "listItemSelected()", bt.getName());
-		        Log.i( "listItemSelected()", ""+btDevs.get((int)id).getUuids().length );
-		        Log.i( "listItemSelected()", btDevs.get((int)id).getUuids()[0].getUuid().toString());
-		        UUID uuid =  bt.getUuids()[0].getUuid();
-		        try {
-		        	BluetoothSocket btSock = bt.createRfcommSocketToServiceRecord(uuid);
-		        	btSock.connect();
-		        	OutputStream os = btSock.getOutputStream();
-		        	OutputStreamWriter ow = new OutputStreamWriter(os);
-		        	BufferedWriter writer = new BufferedWriter(ow);
-		        	
-		        	writer.write("put 2 100\n");
-		        	Thread.sleep(1000);
-		        	writer.write("put 2 0\n" );
-		        } catch (IOException e ) {
-		        	Log.e("listItemsSelected()", "Error opening BluetoothSocket"+e.toString());
-		        } catch (InterruptedException e ) {
-		        	Log.e("listItemsSelected()", "Error sleeping"+e.toString() );
-		        }
+				final long id_final = id;
+				final View view_final = view;
+				new Thread(new Runnable() {
+				    public void run() {
+				    	BluetoothDevice bt = btDevs.get((int)id_final);
+				        Log.i( "listItemSelected()", "id = "+id_final);
+				        Log.i( "listItemSelected()", ((TextView)view_final).getText().toString() );	
+				        Log.i( "listItemSelected()", bt.getName());
+				        Log.i( "listItemSelected()", ""+btDevs.get((int)id_final).getUuids().length );
+				        Log.i( "listItemSelected()", btDevs.get((int)id_final).getUuids()[0].getUuid().toString());
+				        UUID uuid =  bt.getUuids()[0].getUuid();
+				        try {
+				        	BluetoothSocket btSock = bt.createRfcommSocketToServiceRecord(uuid);
+				        	btSock.connect();
+				        	OutputStream os = btSock.getOutputStream();
+				        	OutputStreamWriter ow = new OutputStreamWriter(os);
+				        	BufferedWriter writer = new BufferedWriter(ow);
+				        	
+				        	writer.write("put 2 100\n");
+				        	Thread.sleep(1000);
+				        	writer.write("put 2 0\n" );
+				        } catch (IOException e ) {
+				        	Log.e("listItemsSelected()", "Error opening BluetoothSocket"+e.toString());
+				        } catch (InterruptedException e ) {
+				        	Log.e("listItemsSelected()", "Error sleeping"+e.toString() );
+				        }
+				    }
+				  }).start();
+				
 			}
         	
         } );
