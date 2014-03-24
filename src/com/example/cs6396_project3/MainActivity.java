@@ -143,7 +143,7 @@ public class MainActivity extends ActionBarActivity {
 				        	Thread.sleep(1000);
 				        	writer.write("put 2 0\n" );
 				        } catch (IOException e ) {
-				        	Log.e("listItemsSelected()", "Error opening BluetoothSocket"+e.toString());
+				        	Log.e("listItemsSelected()", "Error opening BluetoothSocket "+e.toString());
 				        } catch (InterruptedException e ) {
 				        	Log.e("listItemsSelected()", "Error sleeping"+e.toString() );
 				        }
