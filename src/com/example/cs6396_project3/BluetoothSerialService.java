@@ -242,7 +242,8 @@ public class BluetoothSerialService {
                         // Get a BluetoothSocket for a connection with the
                         // given BluetoothDevice
                         try {
-                                tmp = device.createRfcommSocketToServiceRecord(SerialPortServiceClass_UUID);
+                        	    // KJP - Converted to an Insecure connection
+                                tmp = device.createInsecureRfcommSocketToServiceRecord(SerialPortServiceClass_UUID);
                         }
                         catch (IOException e) {
                                 Log.e(TAG,"create() failed",e);
