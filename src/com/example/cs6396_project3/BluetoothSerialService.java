@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ 
+ // Minor modifications by Kenneth Platz and Vinoth Ravady to integrate this
+ // into our project.  These changes involved removing all UI-related activities,
+ // adding logging to the read() and write() methods, and changed the socket to
+ // use insecure connections.
 package com.example.cs6396_project3;
 
 import java.io.IOException;
