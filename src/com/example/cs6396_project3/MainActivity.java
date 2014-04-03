@@ -1,3 +1,20 @@
+//
+// CS 6396, Spring 2014
+// Group 1
+//   Gaurav Dey
+//   Annush Krishnamurthy
+//   Kenneth Platz
+//   Vinoth Ravady
+//   Arulmani Sennimali
+//
+// Phase 1
+// This application provides two major pieces of functionality
+// - A "Scan" button will invoke a Bluetooth startDiscovery()
+//   to populate the ListView with all Bluetooth devices in range
+// - A ListView object which, when selected, will attempt to
+//   open a serial connection to the bluetooth device selected,
+//   and will send two commands to the device.
+//
 package com.example.cs6396_project3;
 
 import com.example.cs6396_project3.R;
