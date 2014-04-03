@@ -236,7 +236,7 @@ public class BluetoothSerialService {
                 private final BluetoothSocket mmSocket;
                 private final BluetoothDevice mmDevice;
 
-                public ConnectThread(BluetoothDevice device) {
+                public ConnectThread(BluetoothDevice device ) {
                         mmDevice = device;
                         BluetoothSocket tmp = null;
                         // Get a BluetoothSocket for a connection with the
