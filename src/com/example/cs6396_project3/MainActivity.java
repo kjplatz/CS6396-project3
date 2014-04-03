@@ -100,7 +100,7 @@ public class MainActivity extends ActionBarActivity {
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
                     short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0);
                 
-                    name = name + " : " + rssi + "dB";
+                    name = name + " : " + rssi + "dB" +  " (" + device.getAddress() + ")";
                     Log.i("onReceive", "Found device "+name );
                 
                     ListView listView = (ListView)findViewById(R.id.listview);
