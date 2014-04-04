@@ -57,6 +57,29 @@ public class MainActivity extends ActionBarActivity {
 	private BluetoothSerialService BlueSS;
     private BroadcastReceiver mReceiver;
     private ArrayList<BluetoothDevice> btDevs;
+    
+    private class LaunchPad {
+    	String address;
+    	int x;
+    	int y;
+    	short rssi;
+    	BluetoothDevice device;
+    	BluetoothSocket sock;
+    	BluetoothSerialService BlueSS;
+       	public LaunchPad( String a, int _x, int _y ) {
+    		address = a;
+    		x = _x;
+    		y = _y;
+    		rssi = 0;
+    		device = null;
+    	    BlueSS = new BluetoothSerialService();
+    	}
+    }
+    
+    LaunchPad[] launchPads = { new LaunchPad( "EC:FE:7E:11:03:94", 0, 0 ), // BlueRadios110394
+    		                   new LaunchPad( "EC:FE:7E:11:03:7E", 1, 1 ), // BlueRadios11037E
+    		                   new LaunchPad( "EC:FE:7E:11:03:2C", 2, 2 ), // BlueRadios11032C
+    };
 
     public void getBluetoothDevices(View v) {
             BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
@@ -99,17 +122,43 @@ public class MainActivity extends ActionBarActivity {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
                     short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0);
-                
+                    int i=0;
+                    for( ; i<launchPads.length; ++i ) {
+                    	Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
+                    	if ( launchPads[i].address == device.getAddress() ) {
+                    		if ( launchPads[i].device == null ) {
+                    			launchPads[i].device = device;
+                    			launchPads[i].BlueSS.connect( launchPads[i].device );
+                    			launchPads[i].rssi = rssi;
+                                name = name + " : " + rssi + "dB" +  " (" + device.getAddress() + ")";
+                                Log.i("onReceive", "Found device "+name );
+                            
+                                ListView listView = (ListView)findViewById(R.id.listview);
+                                ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
+                                adapter.remove( adapter.getItem(i) );
+                                adapter.insert( name,  i );
+                    			return;
+                    		}
+                    		
+                    	}
+                    }
+                    
+                    Log.i( "onReceive()", "Unknown device: "+name );
+ /*               
                     name = name + " : " + rssi + "dB" +  " (" + device.getAddress() + ")";
                     Log.i("onReceive", "Found device "+name );
                 
                     ListView listView = (ListView)findViewById(R.id.listview);
                     ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
-                    adapter.add(name);
-                    btDevs.add(device);
+                    adapter.remove( adapter.getItem(i) );
+                    adapter.insert( name,  i );
+                    
+                    // adapter.add(name);
+                    // btDevs.add(device);
+                     *
+                     */
 
                 }
-                Log.i("onReceive", "exiting...");
             }
         };
         IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND );
@@ -121,10 +170,12 @@ public class MainActivity extends ActionBarActivity {
             BA.enable();
         }
 
-        BlueSS = new BluetoothSerialService( );
         final ListView listview = (ListView) findViewById(R.id.listview);
         Log.i("onCreate()", "listview = " + listview.toString() );
         ArrayList<String> list = new ArrayList<String>();
+        for( int i=0; i<launchPads.length; i++ ) {
+        	list.add("");
+        }
 
         ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1, list );
         listview.setAdapter(itemsAdapter);
@@ -134,14 +185,13 @@ public class MainActivity extends ActionBarActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				final long id_final = id;
+				final int id_final = (int)id;
 				final View view_final = view;
 		    	BluetoothDevice bt = btDevs.get((int)id_final);
 		        Log.i( "listItemSelected()", "id = "+id_final);
 		        Log.i( "listItemSelected()", ((TextView)view_final).getText().toString() );	
 		        Log.i( "listItemSelected()", bt.getName());
 				
-				BlueSS.connect( bt );
 				new Thread(new Runnable() {
 				    public void run() {
 				    	do {
@@ -151,7 +201,7 @@ public class MainActivity extends ActionBarActivity {
 								// TODO Auto-generated catch block
 								Log.e( "Thread", "Exception", e );
 							}
-				    	} while( BlueSS.getState() != BluetoothSerialService.STATE_CONNECTED );
+				    	} while( launchPads[id_final].BlueSS.getState() != BluetoothSerialService.STATE_CONNECTED );
 //				    	BlueSS.write("?\r\n".getBytes());
 				    	BlueSS.write( "put 2 100\n".getBytes() );
 				    	try {
