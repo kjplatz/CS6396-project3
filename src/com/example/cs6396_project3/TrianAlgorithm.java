@@ -1,4 +1,4 @@
-public class  TrianAlgorithm{
+/* public class  TrianAlgorithm{
 	(double)calculateAccuracyWithRSSI:(double)rssi {
 	    //formula adapted from David Young's Radius Networks Android iBeacon Code
 	    if (rssi == 0) {
@@ -37,3 +37,5 @@ public class  TrianAlgorithm{
 	CGPoint point = CGPointMake(x, y);
 	return point;
 }
+
+*/

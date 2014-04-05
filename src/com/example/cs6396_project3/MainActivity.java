@@ -56,6 +56,7 @@ import android.widget.TextView;
 public class MainActivity extends ActionBarActivity {
 	private BluetoothSerialService BlueSS;
     private BroadcastReceiver mReceiver;
+    private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
     private ArrayList<BluetoothDevice> btDevs;
     
     private class LaunchPad {
@@ -64,26 +65,22 @@ public class MainActivity extends ActionBarActivity {
     	int y;
     	short rssi;
     	BluetoothDevice device;
-    	BluetoothSocket sock;
     	BluetoothSerialService BlueSS;
+    	boolean connected;
        	public LaunchPad( String a, int _x, int _y ) {
     		address = a;
     		x = _x;
     		y = _y;
     		rssi = 0;
-    		device = null;
+    		device = BA.getRemoteDevice( a );
     	    BlueSS = new BluetoothSerialService();
+    	    connected = false;
     	}
     }
     
-    LaunchPad[] launchPads = { new LaunchPad( "EC:FE:7E:11:03:94", 0, 0 ), // BlueRadios110394
-    		                   new LaunchPad( "EC:FE:7E:11:03:7E", 1, 1 ), // BlueRadios11037E
-    		                   new LaunchPad( "EC:FE:7E:11:03:2C", 2, 2 ), // BlueRadios11032C
-    };
+    LaunchPad[] launchPads;
 
     public void getBluetoothDevices(View v) {
-            BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
-
             Log.i("getBluetoothDevices()", "Invoking...");
 
             Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -106,6 +103,12 @@ public class MainActivity extends ActionBarActivity {
 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+	    BA = BluetoothAdapter.getDefaultAdapter();
+	    launchPads = new LaunchPad[3];
+	    launchPads[0] = new LaunchPad( "EC:FE:7E:11:03:94", 0, 0 ); // BlueRadios110394
+	    launchPads[1] = new LaunchPad( "EC:FE:7E:11:03:7E", 1, 1 ); // BlueRadios11037E
+	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:2C", 2, 2 ); // BlueRadios11032C
+
 
 		if (savedInstanceState == null) {
 			getSupportFragmentManager().beginTransaction()
@@ -124,21 +127,21 @@ public class MainActivity extends ActionBarActivity {
                     short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0);
                     int i=0;
                     for( ; i<launchPads.length; ++i ) {
-                    	Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
-                    	if ( launchPads[i].address == device.getAddress() ) {
-                    		if ( launchPads[i].device == null ) {
-                    			launchPads[i].device = device;
+                    	Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].device.address );
+                    	if ( launchPads[i].device == device ) {
+                    		if ( launchPads[i].connected ) {
                     			launchPads[i].BlueSS.connect( launchPads[i].device );
-                    			launchPads[i].rssi = rssi;
-                                name = name + " : " + rssi + "dB" +  " (" + device.getAddress() + ")";
-                                Log.i("onReceive", "Found device "+name );
-                            
-                                ListView listView = (ListView)findViewById(R.id.listview);
-                                ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
-                                adapter.remove( adapter.getItem(i) );
-                                adapter.insert( name,  i );
-                    			return;
                     		}
+
+                    		launchPads[i].rssi = rssi;
+                            name = name + " : " + rssi + "dB" +  " (" + device.getAddress() + ")";
+                            Log.i("onReceive", "Found device "+name );
+                            
+                            ListView listView = (ListView)findViewById(R.id.listview);
+                            ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
+                            adapter.remove( adapter.getItem(i) );
+                            adapter.insert( name,  i );
+                            return;
                     		
                     	}
                     }
@@ -164,7 +167,6 @@ public class MainActivity extends ActionBarActivity {
         IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND );
         registerReceiver( mReceiver, filter );
 
-        BluetoothAdapter BA;
         BA = BluetoothAdapter.getDefaultAdapter();
         if ( BA != null && !BA.isEnabled() ) {
             BA.enable();
