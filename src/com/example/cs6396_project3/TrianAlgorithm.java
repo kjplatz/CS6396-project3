@@ -1,41 +1,50 @@
-/* public class  TrianAlgorithm{
-	(double)calculateAccuracyWithRSSI:(double)rssi {
-	    //formula adapted from David Young's Radius Networks Android iBeacon Code
-	    if (rssi == 0) {
+/*
+import java.lang.*;
+public class TrianAlgorithm {
+
+	static class coordi{
+		float x;
+		float y;
+	}
+
+	static coordi calculateCoordinates(float xa, float ya, float xb, float yb, float xc, float yc, float ra, float rb, float rc)
+	{
+		coordi c = new coordi();
+		//	Calculate XY with Trilateration (Beacons 1, 2, and 3 are Beacon subclasses with pre-set X and Y values for location and distance is calculated as above).
+	
+		float S = (float) ((Math.pow(xc, 2.) - Math.pow(xb, 2.) + Math.pow(yc, 2.) - Math.pow(yb, 2.) + Math.pow(rb, 2.) - Math.pow(rc, 2.)) / 2.0);
+		float T = (float) ((Math.pow(xa, 2.) - Math.pow(xb, 2.) + Math.pow(ya, 2.) - Math.pow(yb, 2.) + Math.pow(rb, 2.) - Math.pow(ra, 2.)) / 2.0);
+		c.y = ((T * (xb - xc)) - (S * (xb - xa))) / (((ya - yb) * (xb - xc)) - ((yc - yb) * (xb - xa)));
+		c.x = ((c.y * (ya - yb)) - T) / (xb - xa);
+	
+		return c;
+	}
+	
+	static double calculateAccuracyWithRSSI(double rssi)
+	{
+		if (rssi == 0) {
 	        return -1.0; // if we cannot determine accuracy, return -1.
 	    }
 
-
-	    double txPower = -70;
-	    double ratio = rssi*1.0/txPower;
+	    double power = -70;
+	    double ratio = rssi*1.0/power;
 	    if (ratio < 1.0) {
-	        return pow(ratio,10);
+	        return Math.pow(ratio,10);
 	    }
 	    else {
-	        double accuracy =  (0.89976) * pow(ratio,7.7095) + 0.111;
+	        double accuracy =  (0.89976) * Math.pow(ratio,7.7095) + 0.111;
 	        return accuracy;
 	    }
 	}
-
-//	Calculate XY with Trilateration (Beacons 1, 2, and 3 are Beacon subclasses with pre-set X and Y values for location and distance is calculated as above).
-
-	float xa = beacon1.locationX;
-	float ya = beacon1.locationY;
-	float xb = beacon2.locationX;
-	float yb = beacon2.locationY;
-	float xc = beacon3.locationX;
-	float yc = beacon3.locationY;
-	float ra = beacon1.filteredDistance;
-	float rb = beacon2.filteredDistance;
-	float rc = beacon3.filteredDistance;
-
-	float S = (pow(xc, 2.) - pow(xb, 2.) + pow(yc, 2.) - pow(yb, 2.) + pow(rb, 2.) - pow(rc, 2.)) / 2.0;
-	float T = (pow(xa, 2.) - pow(xb, 2.) + pow(ya, 2.) - pow(yb, 2.) + pow(rb, 2.) - pow(ra, 2.)) / 2.0;
-	float y = ((T * (xb - xc)) - (S * (xb - xa))) / (((ya - yb) * (xb - xc)) - ((yc - yb) * (xb - xa)));
-	float x = ((y * (ya - yb)) - T) / (xb - xa);
-
-	CGPoint point = CGPointMake(x, y);
-	return point;
+	
+	public static void main(String args[])
+	{
+		double rssi = -50;
+		float xa=0; float ya=0; float xb=0; float yb=0; float xc=0; float yc=0; float ra=0; float rb=0; float rc=0;
+		double accurateRssi = arulTest.calculateAccuracyWithRSSI(rssi);
+		//Not sure of the kFilteringFactor, commented for now
+		//rollingRssi = (beacon.rssi * kFilteringFactor) + (rollingRssi * (1.0 - kFilteringFactor));
+		coordi final_coordi = arulTest.calculateCoordinates(xa, ya, xb, yb, xc, yc, ra, rb, rc);
+	}
 }
-
 */
