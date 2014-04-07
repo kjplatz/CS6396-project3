@@ -81,7 +81,7 @@ public class MainActivity extends ActionBarActivity {
     LaunchPad[] launchPads;
 
     public void getBluetoothDevices(View v) {
-            Log.i("getBluetoothDevices()", "Invoking...");
+            Log.i("getBluetoothDevices()", "Invoking...") ;
 
             Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(turnOn, 0);
@@ -89,7 +89,6 @@ public class MainActivity extends ActionBarActivity {
             ListView listView = (ListView)findViewById(R.id.listview);
             ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
 
-            adapter.clear();
             btDevs = new ArrayList<BluetoothDevice>();
 
             BA.startDiscovery();
@@ -105,9 +104,10 @@ public class MainActivity extends ActionBarActivity {
 		setContentView(R.layout.activity_main);
 	    BA = BluetoothAdapter.getDefaultAdapter();
 	    launchPads = new LaunchPad[3];
-	    launchPads[0] = new LaunchPad( "EC:FE:7E:11:03:94", 0, 0 ); // BlueRadios110394
-	    launchPads[1] = new LaunchPad( "EC:FE:7E:11:03:7E", 1, 1 ); // BlueRadios11037E
-	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:2C", 2, 2 ); // BlueRadios11032C
+	    launchPads[0] = new LaunchPad( "EC:FE:7E:11:03:94", 22, 12 ); // BlueRadios110394
+	    //launchPads[1] = new LaunchPad( "EC:FE:7E:11:03:7E", 1, 1 ); // BlueRadios11037E
+	    launchPads[1] = new LaunchPad( "00:22:69:C6:68:3A", 128, 120 ); // stptool-ThinkPad-T61-0
+	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:2C", 16, 210 ); // BlueRadios11032C
 
 
 		if (savedInstanceState == null) {
@@ -127,20 +127,32 @@ public class MainActivity extends ActionBarActivity {
                     short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0);
                     int i=0;
                     for( ; i<launchPads.length; ++i ) {
-                    	Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].device.address );
-                    	if ( launchPads[i].device == device ) {
-                    		if ( launchPads[i].connected ) {
+                    	Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
+                    	if ( launchPads[i].address.equals( device.getAddress() ) ) {
+                    		if ( launchPads[i].connected == false ) {
+                    		    launchPads[i].device = device;
                     			launchPads[i].BlueSS.connect( launchPads[i].device );
-                    		}
-
+                    			launchPads[i].connected = true;
+                    		} 
                     		launchPads[i].rssi = rssi;
-                            name = name + " : " + rssi + "dB" +  " (" + device.getAddress() + ")";
+
                             Log.i("onReceive", "Found device "+name );
                             
                             ListView listView = (ListView)findViewById(R.id.listview);
                             ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
-                            adapter.remove( adapter.getItem(i) );
-                            adapter.insert( name,  i );
+                            
+                            adapter.clear();
+                            String s;
+                            for( int j=0; j<launchPads.length; j++ ) {
+                                BluetoothDevice bd = launchPads[j].device;
+                                if ( launchPads[i].connected ) {
+                                	s = bd.getName() + " " + launchPads[j].rssi + "dB";
+                                } else {
+                                	s = bd.getName() + " not found";
+                                }
+                                adapter.add(s);
+                            }
+
                             return;
                     		
                     	}
@@ -171,6 +183,7 @@ public class MainActivity extends ActionBarActivity {
         if ( BA != null && !BA.isEnabled() ) {
             BA.enable();
         }
+        BA.startDiscovery();
 
         final ListView listview = (ListView) findViewById(R.id.listview);
         Log.i("onCreate()", "listview = " + listview.toString() );
@@ -181,6 +194,10 @@ public class MainActivity extends ActionBarActivity {
 
         ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1, list );
         listview.setAdapter(itemsAdapter);
+        
+        for( int i=0; i<launchPads.length; i++ ) {
+        	itemsAdapter.add("");
+        }
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener()  {
 
@@ -190,9 +207,11 @@ public class MainActivity extends ActionBarActivity {
 				final int id_final = (int)id;
 				final View view_final = view;
 		    	BluetoothDevice bt = btDevs.get((int)id_final);
+
 		        Log.i( "listItemSelected()", "id = "+id_final);
 		        Log.i( "listItemSelected()", ((TextView)view_final).getText().toString() );	
 		        Log.i( "listItemSelected()", bt.getName());
+		    	if ( launchPads[id_final].connected == false ) return;
 				
 				new Thread(new Runnable() {
 				    public void run() {
