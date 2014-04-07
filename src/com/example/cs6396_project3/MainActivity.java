@@ -57,8 +57,7 @@ public class MainActivity extends ActionBarActivity {
 	private BluetoothSerialService BlueSS;
     private BroadcastReceiver mReceiver;
     private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
-    private ArrayList<BluetoothDevice> btDevs;
-    
+        
     private class LaunchPad {
     	String address;
     	int x;
@@ -88,8 +87,6 @@ public class MainActivity extends ActionBarActivity {
 
             ListView listView = (ListView)findViewById(R.id.listview);
             ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
-
-            btDevs = new ArrayList<BluetoothDevice>();
 
             BA.startDiscovery();
             Log.i("getBluetoothDevices()", "Returning...");
@@ -206,11 +203,10 @@ public class MainActivity extends ActionBarActivity {
 					int position, long id) {
 				final int id_final = (int)id;
 				final View view_final = view;
-		    	BluetoothDevice bt = btDevs.get((int)id_final);
 
 		        Log.i( "listItemSelected()", "id = "+id_final);
 		        Log.i( "listItemSelected()", ((TextView)view_final).getText().toString() );	
-		        Log.i( "listItemSelected()", bt.getName());
+		        Log.i( "listItemSelected()", launchPads[id_final].device.getName() );
 		    	if ( launchPads[id_final].connected == false ) return;
 				
 				new Thread(new Runnable() {
