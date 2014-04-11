@@ -89,8 +89,26 @@ public class MainActivity extends ActionBarActivity {
             ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
 
             BA.startDiscovery();
-            Log.i("getBluetoothDevices()", "Returning...");
+            Log.i("getBluetoothDevices()", "Returning..." );
             return;
+    }
+    
+    private int calc_distance( int pad, int rssi ) {
+    	rssi = -rssi;
+    	switch( pad ) {
+    	case 0:
+    	case 2:
+    		if ( rssi <= 43 ) return 0;
+    		if ( rssi <= 48 ) return 15 / (rssi - 43);
+    		if ( rssi <= 53 ) return 15 + 13 / (rssi - 48 );
+    		if ( rssi <= 61 ) return 26 + 10 / (rssi - 53 );
+    		if ( rssi <= 66 ) return 36 + 12 / (rssi - 66 );
+    		if ( rssi <= 67 ) return 48;
+    		if ( rssi <= 69 ) return 60 + 12 / (rssi - 67 ); 
+    		return 72;
+    	}
+    	
+    	return 128;
     }
 	
 	@Override
@@ -100,18 +118,18 @@ public class MainActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 	    BA = BluetoothAdapter.getDefaultAdapter();
-	    launchPads = new LaunchPad[3];
-	    launchPads[0] = new LaunchPad( "EC:FE:7E:11:03:94", 22, 12 ); // BlueRadios110394
-	    //launchPads[1] = new LaunchPad( "EC:FE:7E:11:03:7E", 1, 1 ); // BlueRadios11037E
+	    launchPads = new LaunchPad[6];
+	    launchPads[0] = new LaunchPad( "EC:FE:7E:11:03:94", 28, 10 );   // BlueRadios110394
 	    launchPads[1] = new LaunchPad( "00:22:69:C6:68:3A", 128, 120 ); // stptool-ThinkPad-T61-0
-	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:2C", 16, 210 ); // BlueRadios11032C
-
+	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:2C", 16, 210 );  // BlueRadios11032C
+	    launchPads[3] = new LaunchPad( "EC:FE:7E:11:03:7E", 26, 208 );     // BlueRadios11037E
+	    launchPads[4] = new LaunchPad( "AC:22:0B:62:FF:26", 1, 1 );     // BlueRadiosnexus7
+	    launchPads[5] = new LaunchPad( "EC:FE:7E:11:02:DD", 1, 1 );     // BlueRadios1102DD
 
 		if (savedInstanceState == null) {
 			getSupportFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
-		
         mReceiver = new BroadcastReceiver() {
             @Override
 			public void onReceive(Context context, Intent intent ) {
@@ -142,12 +160,14 @@ public class MainActivity extends ActionBarActivity {
                             String s;
                             for( int j=0; j<launchPads.length; j++ ) {
                                 BluetoothDevice bd = launchPads[j].device;
-                                if ( launchPads[i].connected ) {
-                                	s = bd.getName() + " " + launchPads[j].rssi + "dB";
+                                if ( launchPads[j].connected && launchPads[j].rssi < 0 ) {
+                                	s = bd.getName() + " " + launchPads[j].rssi + "dB ";
+                                	int distance = calc_distance( j, launchPads[j].rssi );
+                                	s += distance + " inches";
+                                    adapter.add(s);
                                 } else {
                                 	s = bd.getName() + " not found";
                                 }
-                                adapter.add(s);
                             }
 
                             return;
