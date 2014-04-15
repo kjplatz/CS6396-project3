@@ -66,7 +66,7 @@ public class MainActivity extends ActionBarActivity {
     	BluetoothDevice device;
     	BluetoothSerialService BlueSS;
     	boolean connected;
-       	public LaunchPad( String a, int _x, int _y ) {
+       	public LaunchPad( String a, int _x, int _y   ) {
     		address = a;
     		x = _x;
     		y = _y;
@@ -88,27 +88,27 @@ public class MainActivity extends ActionBarActivity {
             ListView listView = (ListView)findViewById(R.id.listview);
             ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
 
-            BA.startDiscovery();
+            BA.startDiscovery(); 
             Log.i("getBluetoothDevices()", "Returning..." );
             return;
     }
     
-    private int calc_distance( int pad, int rssi ) {
-    	rssi = -rssi;
-    	switch( pad ) {
-    	case 0:
+    private int calc_distance( int min ) {
+    	int d1, d2, d3;
+    	switch(min) {
+    	case 0: 
+    		d1 = -30 / (launchPads[0].rssi + 66);
+    		d2 = 52 - 22/(launchPads[1].rssi + 76);
+    		return (d1+d2)/2;
+    	case 1:
+    		d1 = 52 - 22/(launchPads[1].rssi + 76);
+    		d2 = -30 / (launchPads[0].rssi + 76);
     	case 2:
-    		if ( rssi <= 43 ) return 0;
-    		if ( rssi <= 48 ) return 15 / (rssi - 43);
-    		if ( rssi <= 53 ) return 15 + 13 / (rssi - 48 );
-    		if ( rssi <= 61 ) return 26 + 10 / (rssi - 53 );
-    		if ( rssi <= 66 ) return 36 + 12 / (rssi - 66 );
-    		if ( rssi <= 67 ) return 48;
-    		if ( rssi <= 69 ) return 60 + 12 / (rssi - 67 ); 
-    		return 72;
+    	case 3:
+    	case 4:
+    	case 5:
     	}
-    	
-    	return 128;
+    	return Integer.MAX_VALUE;
     }
 	
 	@Override
@@ -118,36 +118,48 @@ public class MainActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 	    BA = BluetoothAdapter.getDefaultAdapter();
-	    launchPads = new LaunchPad[6];
-	    launchPads[0] = new LaunchPad( "EC:FE:7E:11:03:94", 28, 10 );   // BlueRadios110394
-	    launchPads[1] = new LaunchPad( "00:22:69:C6:68:3A", 128, 120 ); // stptool-ThinkPad-T61-0
-	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:2C", 16, 210 );  // BlueRadios11032C
-	    launchPads[3] = new LaunchPad( "EC:FE:7E:11:03:7E", 26, 208 );     // BlueRadios11037E
-	    launchPads[4] = new LaunchPad( "AC:22:0B:62:FF:26", 1, 1 );     // BlueRadiosnexus7
-	    launchPads[5] = new LaunchPad( "EC:FE:7E:11:02:DD", 1, 1 );     // BlueRadios1102DD
+	    launchPads = new LaunchPad[5];
+	    launchPads[0] = new LaunchPad( "EC:FE:7E:11:04:5D", 0, 10 );   // BlueRadios11045D
+	    launchPads[1] = new LaunchPad( "EC:FE:7E:11:03:7E", 30, 210 );  // BlueRadios11037E
+	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:31", 52, 208 );  // BlueRadios110331
+	    launchPads[3] = new LaunchPad( "EC:FE:7E:11:02:DD", 77, 1 );     // BlueRadios1102DD
+	    launchPads[4] = new LaunchPad( "EC:FE:7E:11:03:94", 103, 1 );     // BlueRadios1102DD
 
 		if (savedInstanceState == null) {
 			getSupportFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
+		
+		new Thread(new Runnable() {
+		    public void run() {
+                while(true) {
+                	try { 
+                		Thread.sleep(1000);
+                	} catch( Exception e ) {
+                		// Do nothing
+                	}
+                	BluetoothAdapter.getDefaultAdapter().startDiscovery();
+                }    	
+		    }
+		  }).start();
         mReceiver = new BroadcastReceiver() {
             @Override
 			public void onReceive(Context context, Intent intent ) {
                     Log.i("onReceive", "invoking...");
                 String action = intent.getAction();
-                Log.i("onReceive", "got action "+action );
+                // Log.i("onReceive", "got action "+action );
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
-                    short rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0);
+                    short rssi =  (short) Math.abs( intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0) );
                     int i=0;
                     for( ; i<launchPads.length; ++i ) {
-                    	Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
+                    	// Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
                     	if ( launchPads[i].address.equals( device.getAddress() ) ) {
                     		if ( launchPads[i].connected == false ) {
                     		    launchPads[i].device = device;
-                    			launchPads[i].BlueSS.connect( launchPads[i].device );
-                    			launchPads[i].connected = true;
+                    			// launchPads[i].BlueSS.connect( launchPads[i].device );
+                    			// launchPads[i].connected = true;
                     		} 
                     		launchPads[i].rssi = rssi;
 
@@ -158,17 +170,33 @@ public class MainActivity extends ActionBarActivity {
                             
                             adapter.clear();
                             String s;
+                            int min = 0;
                             for( int j=0; j<launchPads.length; j++ ) {
                                 BluetoothDevice bd = launchPads[j].device;
-                                if ( launchPads[j].connected && launchPads[j].rssi < 0 ) {
-                                	s = bd.getName() + " " + launchPads[j].rssi + "dB ";
-                                	int distance = calc_distance( j, launchPads[j].rssi );
-                                	s += distance + " inches";
+                                if ( launchPads[j].rssi > 0 ) {
+                                	s = bd.getName() + " -" + launchPads[j].rssi + "dB ";
+                                	if ( launchPads[i].rssi < launchPads[min].rssi ) {
+                                		min = i;
+                                	}
+
+                                	Log.i("found", s + " min = " + min );
                                     adapter.add(s);
                                 } else {
                                 	s = bd.getName() + " not found";
                                 }
                             }
+                          
+                            int nearestAbove=min+1;
+                            int nearestBelow=min-1;
+                            int check;
+                            int x = calc_distance( min );
+                            s = "Location: " + x + " units";
+                            adapter.add(s);
+                            
+                            s = "Closest to device: " + launchPads[min].address;
+                            adapter.add(s);
+                            	
+                            Log.i( "Closest", launchPads[min].address);
 
                             return;
                     		
@@ -216,7 +244,7 @@ public class MainActivity extends ActionBarActivity {
         	itemsAdapter.add("");
         }
 
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener()  {
+ /*       listview.setOnItemClickListener(new AdapterView.OnItemClickListener()  {
 
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
@@ -254,7 +282,7 @@ public class MainActivity extends ActionBarActivity {
 				  }).start();		
 			}
         	
-        } );
+        } );*/
         Log.i("onCreate()", "Exiting...");
 	}
 
