@@ -96,17 +96,21 @@ public class MainActivity extends ActionBarActivity {
     private int calc_distance( int min ) {
     	int d1, d2, d3;
     	switch(min) {
+    	//P3
     	case 0: 
     		d1 = -30 / (launchPads[0].rssi + 66);
     		d2 = 52 - 22/(launchPads[1].rssi + 76);
     		return (d1+d2)/2;
+    	//P4
     	case 1:
-    		d1 = 52 - 22/(launchPads[1].rssi + 76);
-    		d2 = -30 / (launchPads[0].rssi + 76);
+    		d1 = -52 - 22/(launchPads[1].rssi + 76);
+    		d2 = 77 -  25/ (launchPads[2].rssi + 70);
+    		return ((d1+d2)/2);
+    	//P6
     	case 2:
-    	case 3:
-    	case 4:
-    	case 5:
+    		d1 = -77 - 25/(launchPads[2].rssi + 70);
+    		d2 = 103 -  26/ (launchPads[3].rssi + 71);
+    		return ((d1+d2)/2);
     	}
     	return Integer.MAX_VALUE;
     }
