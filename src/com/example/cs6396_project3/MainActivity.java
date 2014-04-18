@@ -326,5 +326,10 @@ public class MainActivity extends ActionBarActivity {
 			return rootView;
 		}
 	}
+	
+	protected void onStop() {
+		super.onStop();
+		unregisterReceiver( mReceiver );
+	}
 
 }
