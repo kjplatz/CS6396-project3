@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 
 
+import java.util.Calendar;
 import java.util.UUID;
 
 import android.annotation.TargetApi;
@@ -58,11 +59,24 @@ public class MainActivity extends ActionBarActivity {
     private BroadcastReceiver mReceiver;
     private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
         
+    private static final int interval = 10;
+    
+    private class RssiEntry {
+    	int dB;
+    	long time;
+    	
+    	RssiEntry( int _dB ) {
+    		time = System.currentTimeMillis();
+    		dB = _dB;
+    	}
+    }
+    
     private class LaunchPad {
     	String address;
     	int x;
     	int y;
-    	short rssi;
+    	float rssi;
+    	// short rssi;
     	BluetoothDevice device;
     	BluetoothSerialService BlueSS;
     	boolean connected;
@@ -98,18 +112,18 @@ public class MainActivity extends ActionBarActivity {
     	switch(min) {
     	//P3
     	case 0: 
-    		d1 = -30 / (launchPads[0].rssi + 66);
-    		d2 = 52 - 22/(launchPads[1].rssi + 76);
+    		d1 = (int)(-30 / (launchPads[0].rssi + 66));
+    		d2 = (int)(52 - 22/(launchPads[1].rssi + 76));
     		return (d1+d2)/2;
     	//P4
     	case 1:
-    		d1 = -52 - 22/(launchPads[1].rssi + 76);
-    		d2 = 77 -  25/ (launchPads[2].rssi + 70);
+    		d1 = (int)(-52 - 22/(launchPads[1].rssi + 76));
+    		d2 = (int)(77 -  25/ (launchPads[2].rssi + 70));
     		return ((d1+d2)/2);
     	//P6
     	case 2:
-    		d1 = -77 - 25/(launchPads[2].rssi + 70);
-    		d2 = 103 -  26/ (launchPads[3].rssi + 71);
+    		d1 = (int)(-77 - 25/(launchPads[2].rssi + 70));
+    		d2 = (int)(103 -  26/ (launchPads[3].rssi + 71));
     		return ((d1+d2)/2);
     	}
     	return Integer.MAX_VALUE;
@@ -155,15 +169,17 @@ public class MainActivity extends ActionBarActivity {
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
+                    Log.i( "onReceive",  name );
                     short rssi =  (short) Math.abs( intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0) );
                     
                     ListView listView = (ListView)findViewById(R.id.listview);
                     ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
                     
                     adapter.clear();
-                    
+                     
                     int i=0;
                     String s;
+                    
                     int min = 0;
                     for( ; i<launchPads.length; ++i ) {
                     	// Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
@@ -172,42 +188,28 @@ public class MainActivity extends ActionBarActivity {
                     		    launchPads[i].device = device;
                     		} 
                     		launchPads[i].rssi = rssi;
-
-                            Log.i("onReceive", "Found device "+name );
-
-                            for( int j=0; j<launchPads.length; j++ ) {
-                                BluetoothDevice bd = launchPads[j].device;
-                                if ( launchPads[j].rssi > 0 ) {
-                                	s = bd.getName() + " -" + launchPads[j].rssi + "dB ";
-                                	if ( launchPads[i].rssi < launchPads[min].rssi ) {
-                                		min = i;
-                                	}
-
-                                	Log.i("found", s + " min = " + min );
-                                    adapter.add(s);
-                                } else {
-                                	s = bd.getName() + " not found";
-                                }
-                            }
-                          
-                            int nearestAbove=min+1;
-                            int nearestBelow=min-1;
-                            int check;
-                            int x = calc_distance( min );
-                            s = "Location: " + x + " units";
-                            adapter.add(s);
-                            
-                            s = "Closest to device: " + launchPads[min].address;
-                            adapter.add(s);
-                            	
-                            Log.i( "Closest", launchPads[min].address);
-
-                            return;
-                    		
                     	}
-                    }
+
+                        Log.i("onReceive", "Found device "+name );
+                    	BluetoothDevice bd = launchPads[i].device;
+                    	s = bd.getName();
+                        if (launchPads[i].rssi > 0 ) {
+                        	Log.i("found", s + " min = " + min );
+                        	s += " -" + launchPads[i].rssi + "dB";
+                        	if ( launchPads[i].rssi < launchPads[min].rssi ) min = i;
+                        } else {
+                        	s += " not found";
+                        }     		
+                        adapter.add(s);
+                	}
+                    int x = calc_distance( min );
+                    s = "Location: " + x + " units";
+                    adapter.add(s);
                     
-                    Log.i( "onReceive()", "Unknown device: "+name );
+                    s = "Closest to device: " + launchPads[min].address;
+                    adapter.add(s);
+                    	
+                    Log.i( "Closest", launchPads[min].address);
 
                 }
             }
