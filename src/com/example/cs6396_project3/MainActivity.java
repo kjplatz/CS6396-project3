@@ -156,25 +156,25 @@ public class MainActivity extends ActionBarActivity {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
                     short rssi =  (short) Math.abs( intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0) );
+                    
+                    ListView listView = (ListView)findViewById(R.id.listview);
+                    ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
+                    
+                    adapter.clear();
+                    
                     int i=0;
+                    String s;
+                    int min = 0;
                     for( ; i<launchPads.length; ++i ) {
                     	// Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
                     	if ( launchPads[i].address.equals( device.getAddress() ) ) {
                     		if ( launchPads[i].connected == false ) {
                     		    launchPads[i].device = device;
-                    			// launchPads[i].BlueSS.connect( launchPads[i].device );
-                    			// launchPads[i].connected = true;
                     		} 
                     		launchPads[i].rssi = rssi;
 
                             Log.i("onReceive", "Found device "+name );
-                            
-                            ListView listView = (ListView)findViewById(R.id.listview);
-                            ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
-                            
-                            adapter.clear();
-                            String s;
-                            int min = 0;
+
                             for( int j=0; j<launchPads.length; j++ ) {
                                 BluetoothDevice bd = launchPads[j].device;
                                 if ( launchPads[j].rssi > 0 ) {
@@ -208,19 +208,6 @@ public class MainActivity extends ActionBarActivity {
                     }
                     
                     Log.i( "onReceive()", "Unknown device: "+name );
- /*               
-                    name = name + " : " + rssi + "dB" +  " (" + device.getAddress() + ")";
-                    Log.i("onReceive", "Found device "+name );
-                
-                    ListView listView = (ListView)findViewById(R.id.listview);
-                    ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
-                    adapter.remove( adapter.getItem(i) );
-                    adapter.insert( name,  i );
-                    
-                    // adapter.add(name);
-                    // btDevs.add(device);
-                     *
-                     */
 
                 }
             }
@@ -248,45 +235,6 @@ public class MainActivity extends ActionBarActivity {
         	itemsAdapter.add("");
         }
 
- /*       listview.setOnItemClickListener(new AdapterView.OnItemClickListener()  {
-
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				final int id_final = (int)id;
-				final View view_final = view;
-
-		        Log.i( "listItemSelected()", "id = "+id_final);
-		        Log.i( "listItemSelected()", ((TextView)view_final).getText().toString() );	
-		        Log.i( "listItemSelected()", launchPads[id_final].device.getName() );
-		    	if ( launchPads[id_final].connected == false ) return;
-				
-				new Thread(new Runnable() {
-				    public void run() {
-				    	do {
-				    		try {
-								Thread.sleep(1);
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								Log.e( "Thread", "Exception", e );
-							}
-				    	} while( launchPads[id_final].BlueSS.getState() != BluetoothSerialService.STATE_CONNECTED );
-//				    	BlueSS.write("?\r\n".getBytes());
-				    	BlueSS.write( "put 2 100\n".getBytes() );
-				    	try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e1) {
-							// TODO Auto-generated catch block
-							Log.e( "Thread", "Exception", e1 );
-						}
-				    	BlueSS.write( "put 2 0\n".getBytes() );
-//				    	BlueSS.write("?\r\n".getBytes());
-				    	
-				    }
-				  }).start();		
-			}
-        	
-        } );*/
         Log.i("onCreate()", "Exiting...");
 	}
 
