@@ -30,6 +30,7 @@ import java.util.ArrayList;
 
 import java.util.Calendar;
 import java.util.UUID;
+import java.util.Vector;
 
 import android.annotation.TargetApi;
 //import android.R;
@@ -59,7 +60,7 @@ public class MainActivity extends ActionBarActivity {
     private BroadcastReceiver mReceiver;
     private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
         
-    private static final int interval = 10;
+    private static final int maxTime = 10 * 1000;
     
     private class RssiEntry {
     	int dB;
@@ -69,6 +70,10 @@ public class MainActivity extends ActionBarActivity {
     		time = System.currentTimeMillis();
     		dB = _dB;
     	}
+    	RssiEntry( int _dB, long _time ) {
+    		time = _time;
+    		dB = _dB;
+    	}
     }
     
     private class LaunchPad {
@@ -76,6 +81,7 @@ public class MainActivity extends ActionBarActivity {
     	int x;
     	int y;
     	float rssi;
+    	Vector<RssiEntry> rssiVec;
     	// short rssi;
     	BluetoothDevice device;
     	BluetoothSerialService BlueSS;
@@ -85,6 +91,7 @@ public class MainActivity extends ActionBarActivity {
     		x = _x;
     		y = _y;
     		rssi = 0;
+    		rssiVec = new Vector<RssiEntry>();
     		device = BA.getRemoteDevice( a );
     	    BlueSS = new BluetoothSerialService();
     	    connected = false;
@@ -181,14 +188,33 @@ public class MainActivity extends ActionBarActivity {
                     String s;
                     
                     int min = 0;
+                    long time = System.currentTimeMillis();
                     for( ; i<launchPads.length; ++i ) {
+                    	float dB=0;
+                    	int count=0;
+                    	for( RssiEntry ent : launchPads[i].rssiVec ) {
+                    		if ( (ent.time - time) > maxTime ) {
+                    			launchPads[i].rssiVec.remove( ent );
+                    		} else {
+                    			dB += ent.dB;
+                    			count++;
+                    		}
+                    	}
+
                     	// Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
                     	if ( launchPads[i].address.equals( device.getAddress() ) ) {
+                    		RssiEntry ent = new RssiEntry( rssi, time );
+                    		dB += rssi;
+                    		count++;
+                    		launchPads[i].rssiVec.add( ent );
+                    		
                     		if ( launchPads[i].connected == false ) {
                     		    launchPads[i].device = device;
+                    		    launchPads[i].connected = true;
                     		} 
                     		launchPads[i].rssi = rssi;
                     	}
+                    	launchPads[i].rssi = dB / count;
 
                         Log.i("onReceive", "Found device "+name );
                     	BluetoothDevice bd = launchPads[i].device;
