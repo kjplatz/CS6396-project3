@@ -60,7 +60,7 @@ public class MainActivity extends ActionBarActivity {
     private BroadcastReceiver mReceiver;
     private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
         
-    private static final int maxTime = 10 * 1000;
+    private static final int maxTime = 60 * 1000;
     
     private class RssiEntry {
     	int dB;
@@ -148,7 +148,7 @@ public class MainActivity extends ActionBarActivity {
 	    launchPads[1] = new LaunchPad( "EC:FE:7E:11:03:7E", 30, 210 );  // BlueRadios11037E
 	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:31", 52, 208 );  // BlueRadios110331
 	    launchPads[3] = new LaunchPad( "EC:FE:7E:11:02:DD", 77, 1 );     // BlueRadios1102DD
-	    launchPads[4] = new LaunchPad( "EC:FE:7E:11:03:94", 103, 1 );     // BlueRadios1102DD
+	    launchPads[4] = new LaunchPad( "EC:FE:7E:11:03:2C", 103, 1 );     // BlueRadios1102DD
 
 		if (savedInstanceState == null) {
 			getSupportFragmentManager().beginTransaction()
