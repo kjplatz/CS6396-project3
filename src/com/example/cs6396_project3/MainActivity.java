@@ -176,6 +176,7 @@ public class MainActivity extends ActionBarActivity {
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
+                    if ( name == null ) name = "(null)";
                     Log.i( "onReceive",  name );
                     short rssi =  (short) Math.abs( intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0) );
                     
@@ -214,7 +215,11 @@ public class MainActivity extends ActionBarActivity {
                     		} 
                     		launchPads[i].rssi = rssi;
                     	}
-                    	launchPads[i].rssi = dB / count;
+                    	if (count > 0) {
+                    	    launchPads[i].rssi = dB / count;
+                    	} else {
+                            launchPads[i].rssi = 0;
+                    	}
 
                         Log.i("onReceive", "Found device "+name );
                     	BluetoothDevice bd = launchPads[i].device;
