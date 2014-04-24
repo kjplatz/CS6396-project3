@@ -135,6 +135,48 @@ public class MainActivity extends ActionBarActivity {
     	}
     	return Integer.MAX_VALUE;
     }
+    
+    private class FingerPrint {
+    	int x;
+    	float[] rssi;
+
+    	FingerPrint( int _x, float _r1, float _r2, float _r3, float _r4, float _r5 ) {
+    		x=_x;
+            rssi = new float[5];
+            rssi[0] = _r1;
+            rssi[1] = _r2;
+            rssi[2] = _r3;
+            rssi[3] = _r4;
+            rssi[4] = _r5;
+    	};
+    };
+    
+    private float find_distance( int item, float[] rssi ) {
+    	float distance = 0;
+    	float r=0;
+    	for( int i=0; i<fingerprints[item].rssi.length; i++ ) {
+    		if ( rssi[i] == 0 ) continue;
+    		
+    		r = fingerprints[item].rssi[i] - rssi[i];
+    		distance += (r * r);
+    	}
+    	Log.i("Distance", ""+item+" = "+distance );
+    	return distance;
+    }
+    private int find_closest( float[] rssi ) {
+    	int closest=0;
+    	float closest_dist=find_distance( 0, rssi );
+    	for( int i=1; i<fingerprints.length; i++ ) {
+    		float dist = find_distance( i, rssi );
+    		if ( dist < closest_dist ) {
+    			closest_dist = dist;
+    			closest = i;
+    		}
+    	}
+        return closest;	
+    }
+    
+    private FingerPrint[] fingerprints;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -148,8 +190,12 @@ public class MainActivity extends ActionBarActivity {
 	    launchPads[1] = new LaunchPad( "EC:FE:7E:11:03:7E", 30, 210 );  // BlueRadios11037E
 	    launchPads[2] = new LaunchPad( "EC:FE:7E:11:03:31", 52, 208 );  // BlueRadios110331
 	    launchPads[3] = new LaunchPad( "EC:FE:7E:11:02:DD", 77, 1 );     // BlueRadios1102DD
-	    launchPads[4] = new LaunchPad( "EC:FE:7E:11:03:2C", 103, 1 );     // BlueRadios1102DD
+	    launchPads[4] = new LaunchPad( "EC:FE:7E:11:03:2C", 103, 12 );     // BlueRadios11032C
 
+	    fingerprints = new FingerPrint[1];
+	    fingerprints[0] = new FingerPrint( 12, 0, 0, 0, 0, 0 );
+	    
+	    
 		if (savedInstanceState == null) {
 			getSupportFragmentManager().beginTransaction()
 					.add(R.id.container, new PlaceholderFragment()).commit();
@@ -172,6 +218,7 @@ public class MainActivity extends ActionBarActivity {
 			public void onReceive(Context context, Intent intent ) {
                     Log.i("onReceive", "invoking...");
                 String action = intent.getAction();
+
                 // Log.i("onReceive", "got action "+action );
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -179,6 +226,7 @@ public class MainActivity extends ActionBarActivity {
                     if ( name == null ) name = "(null)";
                     Log.i( "onReceive",  name );
                     short rssi =  (short) Math.abs( intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0) );
+                    float[] r = new float[launchPads.length];
                     
                     ListView listView = (ListView)findViewById(R.id.listview);
                     ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
@@ -217,6 +265,7 @@ public class MainActivity extends ActionBarActivity {
                     	}
                     	if (count > 0) {
                     	    launchPads[i].rssi = dB / count;
+                    	    r[i] = launchPads[i].rssi;
                     	} else {
                             launchPads[i].rssi = 0;
                     	}
@@ -225,22 +274,20 @@ public class MainActivity extends ActionBarActivity {
                     	BluetoothDevice bd = launchPads[i].device;
                     	s = bd.getName();
                         if (launchPads[i].rssi > 0 ) {
-                        	Log.i("found", s + " min = " + min );
                         	s += " -" + launchPads[i].rssi + "dB";
-                        	if ( launchPads[i].rssi < launchPads[min].rssi ) min = i;
                         } else {
                         	s += " not found";
                         }     		
                         adapter.add(s);
                 	}
-                    int x = calc_distance( min );
-                    s = "Location: " + x + " units";
+                    min = find_closest(r);
+                    s = "Location: " + fingerprints[min].x + " units";
                     adapter.add(s);
                     
-                    s = "Closest to device: " + launchPads[min].address;
+                    s = "Closest to fingerprint: " +fingerprints[min].rssi;
                     adapter.add(s);
                     	
-                    Log.i( "Closest", launchPads[min].address);
+                    Log.i( "Closest", fingerprints[min].rssi);
 
                 }
             }
