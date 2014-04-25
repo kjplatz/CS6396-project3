@@ -2,7 +2,7 @@
 // CS 6396, Spring 2014
 // Group 1
 //   Gaurav Dey
-//   Annush Krishnamurthy
+//   Anush Krishnamurthy
 //   Kenneth Platz
 //   Vinoth Ravady
 //   Arulmani Sennimali
