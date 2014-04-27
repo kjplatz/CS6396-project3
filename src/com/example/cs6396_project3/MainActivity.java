@@ -56,11 +56,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 public class MainActivity extends ActionBarActivity {
-	private BluetoothSerialService BlueSS;
+	//private BluetoothSerialService BlueSS;
     private BroadcastReceiver mReceiver;
     private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
         
-    private static final int maxTime = 60 * 1000;
+    private static final int maxTime = 30 * 1000;
     
     private class RssiEntry {
     	int dB;
@@ -84,7 +84,7 @@ public class MainActivity extends ActionBarActivity {
     	Vector<RssiEntry> rssiVec;
     	// short rssi;
     	BluetoothDevice device;
-    	BluetoothSerialService BlueSS;
+    	//BluetoothSerialService BlueSS;
     	boolean connected;
        	public LaunchPad( String a, int _x, int _y   ) {
     		address = a;
@@ -93,7 +93,7 @@ public class MainActivity extends ActionBarActivity {
     		rssi = 0;
     		rssiVec = new Vector<RssiEntry>();
     		device = BA.getRemoteDevice( a );
-    	    BlueSS = new BluetoothSerialService();
+    	    //BlueSS = new BluetoothSerialService();
     	    connected = false;
     	}
     }
@@ -194,16 +194,26 @@ public class MainActivity extends ActionBarActivity {
       
       
       //For some reason when we added fingerprints[6] the app crashed. Maybe because of some index problem?? Please check.
-	    fingerprints = new FingerPrint[5];
+	    fingerprints = new FingerPrint[16
+	                                   
+	                                   
+	                                   ];
 	    fingerprints[0] = new FingerPrint( 12, 77.4f, 84.4f, 0.0f, 74.7f, 58.0f);
 	    fingerprints[1] = new FingerPrint( 16, 76.56338f, 81.1125f, 0.0f, 68.61628f, 57.2637f);
 	    fingerprints[2] = new FingerPrint( 22, 77.85f, 80.3158f, 0.0f, 66.38461f, 66.21f);
-	    fingerprints[3] = new FingerPrint( 84, 64.0f, 62.0f, 0.0f, 76.0f, 77.0f);
-	    fingerprints[4] = new FingerPrint( 108, 49.3f, 74.36364f, 0.0f, 85.6f, 83.2f);
-	    //fingerprints[5] = new FingerPrint( 114, 53.0f, 75.0f, 0.0f, 83.0f, 83.0f);
-	    //fingerprints[6] = new FingerPrint( 120, 54.8571f, 76.75f, 0.0f, 81.14286f, 83.1f);
-	 //   fingerprints[7] = new FingerPrint( 126, 55.0f, 75.39286f, 0.0f, 82.36f, 84.6263f);
-	    //fingerprints[7] = new FingerPrint( 135, 58.625f, 76.0625f, 0.0f, 85.28571f, 85.66664f);
+	    fingerprints[3] = new FingerPrint( 28, 76.057f, 80.3636f, 0.0f, 67.6154f, 64.7333f );
+        fingerprints[4] = new FingerPrint( 35, 82.22f, 78.77f, 0, 56.9f, 70.46f );
+        fingerprints[5] = new FingerPrint( 41, 75, 73.2f, 0, 60, 68.3336f );
+        fingerprints[6] = new FingerPrint( 53, 76.1666f, 71.1666f, 0, 66.55f, 75.9444f );
+        fingerprints[7] = new FingerPrint( 65, 69.2f, 68.7778f, 0, 73.5556f, 78.3636f );
+        fingerprints[8] = new FingerPrint( 78, 70, 57.35f, 0, 74.9444f, 77 );
+	    fingerprints[9] = new FingerPrint( 84, 64.0f, 62.0f, 0.0f, 76.0f, 77.0f);
+	    fingerprints[10] = new FingerPrint( 90, 64.5f, 63.557f, 0, 81.875f, 78.3636f );
+	    fingerprints[11] = new FingerPrint( 108, 49.3f, 74.36364f, 0.0f, 85.6f, 83.2f);
+	    fingerprints[12] = new FingerPrint( 114, 53.0f, 75.0f, 0.0f, 83.0f, 83.0f);
+	    fingerprints[13] = new FingerPrint( 120, 54.8571f, 76.75f, 0.0f, 81.14286f, 83.1f);
+	    fingerprints[14] = new FingerPrint( 126, 55.0f, 75.39286f, 0.0f, 82.36f, 84.6263f);
+	    fingerprints[15] = new FingerPrint( 135, 58.625f, 76.0625f, 0.0f, 85.28571f, 85.66664f);
 	    
 	    
 		if (savedInstanceState == null) {
@@ -280,7 +290,7 @@ public class MainActivity extends ActionBarActivity {
                             launchPads[i].rssi = 0;
                     	}
 
-                        Log.i("onReceive", "Found device "+name );
+                        //Log.i("onReceive", "Found device "+name );
                     	BluetoothDevice bd = launchPads[i].device;
                     	s = bd.getName();
                         if (launchPads[i].rssi > 0 ) {
@@ -294,7 +304,7 @@ public class MainActivity extends ActionBarActivity {
                     s = "Location: " + fingerprints[min].x + " units";
                     adapter.add(s);
                     
-                    s = "Closest to fingerprint: " +fingerprints[min].rssi[min];
+                    s = "Closest to fingerprint: " +min;
                     adapter.add(s);
                     	
                     //Log.i( "Closest", fingerprints[min].rssi);
