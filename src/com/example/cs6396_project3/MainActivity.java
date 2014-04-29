@@ -145,7 +145,7 @@ public class MainActivity extends Activity {
     		r = fingerprints[item].rssi[i] - rssi[i];
     		distance += (r * r);
     	}
-    	Log.i("Distance", ""+item+" = "+distance );
+//    	Log.i("Distance", ""+item+" = "+distance );
     	return distance;
     }
     private int find_closest( float[] rssi ) {
@@ -226,18 +226,18 @@ public class MainActivity extends Activity {
 	    };
 	    
 	    updateHandler.postDelayed(updateRunnable, 500);
-		new Thread(new Runnable() {
-		    public void run() {
-                while(true) {
-                	try { 
-                		Thread.sleep(1000);
-                	} catch( Exception e ) {
-                		// Do nothing
-                	}
-                	BluetoothAdapter.getDefaultAdapter().startDiscovery();
-                }    	
-		    }
-		  }).start();
+//		new Thread(new Runnable() {
+//		    public void run() {
+//                while(true) {
+//                	try { 
+//                		Thread.sleep(1000);
+//                	} catch( Exception e ) {
+//                		// Do nothing
+//                	}
+//                	BluetoothAdapter.getDefaultAdapter().startDiscovery();
+//                }    	
+//		    }
+//		  }).start();
         mReceiver = new BroadcastReceiver() {
             @Override
 			public void onReceive(Context context, Intent intent ) {
@@ -268,7 +268,7 @@ public class MainActivity extends Activity {
                     	int count=0;
                     	for( RssiEntry ent : launchPads[i].rssiVec ) {
                     		if ( (ent.time - time) > maxTime ) {
-                    			launchPads[i].rssiVec.remove( ent );
+  //                  			launchPads[i].rssiVec.remove( ent );
                     		} else {
                     			dB += ent.dB;
                     			count++;
