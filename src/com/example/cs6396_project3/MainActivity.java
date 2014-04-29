@@ -242,7 +242,7 @@ public class MainActivity extends Activity {
 	    		}
 	    		
 	    		
-	    		Log.i("PositionUpdate", ""+r );
+	    		//Log.i("PositionUpdate", ""+r );
 	    		int min = find_closest( r );
 	    		myview.setYPos( min );
 	    	}
@@ -264,7 +264,7 @@ public class MainActivity extends Activity {
         mReceiver = new BroadcastReceiver() {
             @Override
 			public void onReceive(Context context, Intent intent ) {
-                    Log.i("onReceive", "invoking...");
+//                    Log.i("onReceive", "invoking...");
                 String action = intent.getAction();
 
                 // Log.i("onReceive", "got action "+action );
@@ -272,8 +272,8 @@ public class MainActivity extends Activity {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
                     if ( name == null ) name = "(null)";
-                    Log.i( "onReceive",  name );
                     short rssi =  (short) Math.abs( intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0) );
+                    Log.i( "onReceive",  name + " " + rssi + " dB");
                     float[] r = new float[launchPads.length];
 //                    
 //                    ListView listView = (ListView)findViewById(R.id.listview);
@@ -336,7 +336,7 @@ public class MainActivity extends Activity {
 //                    s = "Closest to fingerprint: " +min;
 //                    adapter.add(s);
                     	
-                    Log.i( "onReceive", "Location is " + fingerprints[min].x );
+//                    Log.i( "onReceive", "Location is " + fingerprints[min].x );
 
                 }
             }
