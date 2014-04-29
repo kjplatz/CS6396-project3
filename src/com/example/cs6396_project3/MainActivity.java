@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.Vector;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 //import android.R;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -42,8 +43,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -55,12 +58,16 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends Activity {
+//	public class MainActivity extends ActionBarActivity {
+
 	//private BluetoothSerialService BlueSS;
     private BroadcastReceiver mReceiver;
     private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
         
     private static final int maxTime = 30 * 1000;
+    
+    private MyView myview;
     
     private class RssiEntry {
     	int dB;
@@ -114,28 +121,6 @@ public class MainActivity extends ActionBarActivity {
             return;
     }
     
-    private int calc_distance( int min ) {
-    	int d1, d2, d3;
-    	switch(min) {
-    	//P3
-    	case 0: 
-    		d1 = (int)(-30 / (launchPads[0].rssi + 66));
-    		d2 = (int)(52 - 22/(launchPads[1].rssi + 76));
-    		return (d1+d2)/2;
-    	//P4
-    	case 1:
-    		d1 = (int)(-52 - 22/(launchPads[1].rssi + 76));
-    		d2 = (int)(77 -  25/ (launchPads[2].rssi + 70));
-    		return ((d1+d2)/2);
-    	//P6
-    	case 2:
-    		d1 = (int)(-77 - 25/(launchPads[2].rssi + 70));
-    		d2 = (int)(103 -  26/ (launchPads[3].rssi + 71));
-    		return ((d1+d2)/2);
-    	}
-    	return Integer.MAX_VALUE;
-    }
-    
     private class FingerPrint {
     	int x;
     	float[] rssi;
@@ -182,8 +167,15 @@ public class MainActivity extends ActionBarActivity {
 	protected void onCreate(Bundle savedInstanceState) {
         Log.i("onCreate()", "Invoking...");
 
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+		setContentView( myview = new MyView(this, dm) );
+		myview.setYPos( 126 );
+		
+		Log.i("Dimensions", "Height = " + dm.widthPixels + " Width = "+dm.heightPixels);
+		// setContentView(R.layout.activity_main);
 	    BA = BluetoothAdapter.getDefaultAdapter();
 	    launchPads = new LaunchPad[5];
 	    launchPads[0] = new LaunchPad( "EC:FE:7E:11:04:5D", 0, 10 );   // BlueRadios11045D
@@ -194,33 +186,46 @@ public class MainActivity extends ActionBarActivity {
       
       
       //For some reason when we added fingerprints[6] the app crashed. Maybe because of some index problem?? Please check.
-	    fingerprints = new FingerPrint[16
-	                                   
-	                                   
-	                                   ];
-	    fingerprints[0] = new FingerPrint( 12, 77.4f, 84.4f, 0.0f, 74.7f, 58.0f);
-	    fingerprints[1] = new FingerPrint( 16, 76.56338f, 81.1125f, 0.0f, 68.61628f, 57.2637f);
-	    fingerprints[2] = new FingerPrint( 22, 77.85f, 80.3158f, 0.0f, 66.38461f, 66.21f);
-	    fingerprints[3] = new FingerPrint( 28, 76.057f, 80.3636f, 0.0f, 67.6154f, 64.7333f );
-        fingerprints[4] = new FingerPrint( 35, 82.22f, 78.77f, 0, 56.9f, 70.46f );
-        fingerprints[5] = new FingerPrint( 41, 75, 73.2f, 0, 60, 68.3336f );
-        fingerprints[6] = new FingerPrint( 53, 76.1666f, 71.1666f, 0, 66.55f, 75.9444f );
-        fingerprints[7] = new FingerPrint( 65, 69.2f, 68.7778f, 0, 73.5556f, 78.3636f );
-        fingerprints[8] = new FingerPrint( 78, 70, 57.35f, 0, 74.9444f, 77 );
-	    fingerprints[9] = new FingerPrint( 84, 64.0f, 62.0f, 0.0f, 76.0f, 77.0f);
-	    fingerprints[10] = new FingerPrint( 90, 64.5f, 63.557f, 0, 81.875f, 78.3636f );
-	    fingerprints[11] = new FingerPrint( 108, 49.3f, 74.36364f, 0.0f, 85.6f, 83.2f);
-	    fingerprints[12] = new FingerPrint( 114, 53.0f, 75.0f, 0.0f, 83.0f, 83.0f);
-	    fingerprints[13] = new FingerPrint( 120, 54.8571f, 76.75f, 0.0f, 81.14286f, 83.1f);
-	    fingerprints[14] = new FingerPrint( 126, 55.0f, 75.39286f, 0.0f, 82.36f, 84.6263f);
-	    fingerprints[15] = new FingerPrint( 135, 58.625f, 76.0625f, 0.0f, 85.28571f, 85.66664f);
+	    fingerprints = new FingerPrint[22];
+	    fingerprints[0] = new FingerPrint( 0, 76.4f, 81.222f, 73.0833f, 71.25f, 56.66f );
+	    fingerprints[1] = new FingerPrint( 12, 75f, 83.13f, 73.32f, 70.608f, 55.2f);
+	    fingerprints[2] = new FingerPrint( 16, 69.637f, 68.74286f, 63.9838f, 70.5169f, 74.36638f);
+	    fingerprints[3] = new FingerPrint( 22, 69.395f, 68.36441f, 63.60759f, 70.75111f, 74.7668f);
+	    fingerprints[4] = new FingerPrint( 28, 68.75728f, 67.614f, 63.02232f, 71.31731f, 75.72596f );
+        fingerprints[5] = new FingerPrint( 35, 68.3281f, 66.9282f, 62.4928f, 71.78974f, 76.55498f );
+        fingerprints[6] = new FingerPrint( 41, 67.96722f, 66.061f, 62.2551f, 72.86339f, 77.24f );
+        fingerprints[7] = new FingerPrint( 47, 67.431f, 65.22034f, 61.887f, 74.1636f, 77.81481f );
+        fingerprints[8] = new FingerPrint( 53, 66.85621f, 64.31875f, 62.0188f, 75.58108f, 78.34028f );
+        fingerprints[9] = new FingerPrint( 59, 66.0365f, 63.9261f, 62.546764f, 76.81955f, 78.92969f );
+        fingerprints[10] = new FingerPrint( 65, 65.352f, 63.5275f, 63.6774f, 77.83761f, 79.60361f );
+        fingerprints[11] = new FingerPrint( 71, 64.60909f, 63.47368f, 64.71171f, 78.54717f, 80.06061f );
+        fingerprints[12] = new FingerPrint( 78, 62.9777f, 64.39130f, 66.56322f, 79.69879f, 80.8533f );
+	    fingerprints[13] = new FingerPrint( 84, 62.25f, 65.73684f, 67.666f, 80.169014f, 81.08064f);
+	    fingerprints[14] = new FingerPrint( 90, 61.6181f, 67.6272f, 68.40351f, 80.92453f, 81.05882f );
+        fingerprints[15] = new FingerPrint( 96, 60.75f, 67.8880f, 68.878f, 81.216f, 81.694f );
+        fingerprints[16] = new FingerPrint( 102, 60.2222f, 67.2871f, 69.1f, 81.56f, 81.33336f );
+	    fingerprints[17] = new FingerPrint( 108, 55.705883f, 75.4127f, 73.93846f, 84.339f, 83.9403f);
+	    fingerprints[18] = new FingerPrint( 114, 56.7451f, 76.270836f, 73.791664f, 84.9025f, 83.72727f);
+	    fingerprints[19] = new FingerPrint( 120, 57.85714f, 77.40625f, 74.90625f, 84.344f, 83.72973f);
+	    fingerprints[20] = new FingerPrint( 126, 58.0689f, 77.8846f, 74.12f, 84.3333f, 83.9677f);
+	    fingerprints[21] = new FingerPrint( 135, 59.7f, 78.1111f, 73.36364f, 85.90909f, 84f);
 	    
 	    
-		if (savedInstanceState == null) {
-			getSupportFragmentManager().beginTransaction()
-					.add(R.id.container, new PlaceholderFragment()).commit();
-		}
+//		if (savedInstanceState == null) {
+//			getSupportFragmentManager().beginTransaction()
+//					.add(R.id.container, new PlaceholderFragment()).commit();
+//		}
 		
+	    final Handler updateHandler = new Handler();
+	    Runnable updateRunnable = new Runnable() {
+	    	@Override
+	    	public void run() {
+	    		BluetoothAdapter.getDefaultAdapter().startDiscovery();
+	    		updateHandler.postDelayed( this, 500 );
+	    	}
+	    };
+	    
+	    updateHandler.postDelayed(updateRunnable, 500);
 		new Thread(new Runnable() {
 		    public void run() {
                 while(true) {
@@ -247,11 +252,11 @@ public class MainActivity extends ActionBarActivity {
                     Log.i( "onReceive",  name );
                     short rssi =  (short) Math.abs( intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0) );
                     float[] r = new float[launchPads.length];
-                    
-                    ListView listView = (ListView)findViewById(R.id.listview);
-                    ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
-                    
-                    adapter.clear();
+//                    
+//                    ListView listView = (ListView)findViewById(R.id.listview);
+//                    ArrayAdapter<String> adapter = (ArrayAdapter<String>)listView.getAdapter();
+//                    
+//                    adapter.clear();
                      
                     int i=0;
                     String s;
@@ -298,22 +303,24 @@ public class MainActivity extends ActionBarActivity {
                         } else {
                         	s += " not found";
                         }     		
-                        adapter.add(s);
+//                        adapter.add(s);
                 	}
                     min = find_closest(r);
-                    s = "Location: " + fingerprints[min].x + " units";
-                    adapter.add(s);
-                    
-                    s = "Closest to fingerprint: " +min;
-                    adapter.add(s);
+                    myview.setYPos(fingerprints[min].x);
+//                    s = "Location: " + fingerprints[min].x + " units";
+//                    adapter.add(s);
+//                    
+//                    s = "Closest to fingerprint: " +min;
+//                    adapter.add(s);
                     	
-                    //Log.i( "Closest", fingerprints[min].rssi);
+                    Log.i( "onReceive", "Location is " + fingerprints[min].x );
 
                 }
             }
         };
         IntentFilter filter = new IntentFilter( BluetoothDevice.ACTION_FOUND );
         registerReceiver( mReceiver, filter );
+        Log.i( "onCreate",  "Registered receiver..." );
 
         BA = BluetoothAdapter.getDefaultAdapter();
         if ( BA != null && !BA.isEnabled() ) {
@@ -321,19 +328,19 @@ public class MainActivity extends ActionBarActivity {
         }
         BA.startDiscovery();
 
-        final ListView listview = (ListView) findViewById(R.id.listview);
-        Log.i("onCreate()", "listview = " + listview.toString() );
-        ArrayList<String> list = new ArrayList<String>();
-        for( int i=0; i<launchPads.length; i++ ) {
-        	list.add("");
-        }
-
-        ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1, list );
-        listview.setAdapter(itemsAdapter);
-        
-        for( int i=0; i<launchPads.length; i++ ) {
-        	itemsAdapter.add("");
-        }
+//        final ListView listview = (ListView) findViewById(R.id.listview);
+//        Log.i("onCreate()", "listview = " + listview.toString() );
+//        ArrayList<String> list = new ArrayList<String>();
+//        for( int i=0; i<launchPads.length; i++ ) {
+//        	list.add("");
+//        }
+//
+//        ArrayAdapter<String> itemsAdapter = new ArrayAdapter<String>( this, android.R.layout.simple_list_item_1, list );
+//        listview.setAdapter(itemsAdapter);
+//        
+//        for( int i=0; i<launchPads.length; i++ ) {
+//        	itemsAdapter.add("");
+//        }
 
         Log.i("onCreate()", "Exiting...");
 	}
