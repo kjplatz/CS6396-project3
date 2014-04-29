@@ -222,6 +222,29 @@ public class MainActivity extends Activity {
 	    	public void run() {
 	    		BluetoothAdapter.getDefaultAdapter().startDiscovery();
 	    		updateHandler.postDelayed( this, 500 );
+	    		long time = System.currentTimeMillis();
+	    		float[] r = new float[launchPads.length];
+	    		
+	    		// Update the RSSI values of all launchpads.
+	    		for( int i=0; i<launchPads.length; i++ ) {
+	    			float dB = 0.0f;
+	    			int count=0;
+	    			for( RssiEntry re : launchPads[i].rssiVec ) {
+	    				if ( (time - re.time) > maxTime ) continue;
+	    				dB += re.dB;
+	    				count++;
+	    			}
+	    			
+	    			if ( count > 0 ) launchPads[i].rssi = dB / count;
+	    			else             launchPads[i].rssi = 0f;
+	    			
+	    			r[i] = launchPads[i].rssi;
+	    		}
+	    		
+	    		
+	    		Log.i("PositionUpdate", ""+r );
+	    		int min = find_closest( r );
+	    		myview.setYPos( min );
 	    	}
 	    };
 	    
@@ -264,49 +287,49 @@ public class MainActivity extends Activity {
                     int min = 0;
                     long time = System.currentTimeMillis();
                     for( ; i<launchPads.length; ++i ) {
-                    	float dB=0;
-                    	int count=0;
-                    	for( RssiEntry ent : launchPads[i].rssiVec ) {
-                    		if ( (ent.time - time) > maxTime ) {
-  //                  			launchPads[i].rssiVec.remove( ent );
-                    		} else {
-                    			dB += ent.dB;
-                    			count++;
-                    		}
-                    	}
+//                    	float dB=0;
+//                    	int count=0;
+//                    	for( RssiEntry ent : launchPads[i].rssiVec ) {
+//                    		if ( (ent.time - time) > maxTime ) {
+//  //                  			launchPads[i].rssiVec.remove( ent );
+//                    		} else {
+//                    			dB += ent.dB;
+//                    			count++;
+//                    		}
+//                    	}
 
                     	// Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
                     	if ( launchPads[i].address.equals( device.getAddress() ) ) {
                     		RssiEntry ent = new RssiEntry( rssi, time );
-                    		dB += rssi;
-                    		count++;
+//                    		dB += rssi;
+//                    		count++;
                     		launchPads[i].rssiVec.add( ent );
                     		
-                    		if ( launchPads[i].connected == false ) {
-                    		    launchPads[i].device = device;
-                    		    launchPads[i].connected = true;
-                    		} 
-                    		launchPads[i].rssi = rssi;
+//                    		if ( launchPads[i].connected == false ) {
+//                    		    launchPads[i].device = device;
+//                    		    launchPads[i].connected = true;
+//                    		} 
+//                    		launchPads[i].rssi = rssi;
                     	}
-                    	if (count > 0) {
-                    	    launchPads[i].rssi = dB / count;
-                    	    r[i] = launchPads[i].rssi;
-                    	} else {
-                            launchPads[i].rssi = 0;
-                    	}
+//                    	if (count > 0) {
+//                    	    launchPads[i].rssi = dB / count;
+//                    	    r[i] = launchPads[i].rssi;
+//                    	} else {
+//                            launchPads[i].rssi = 0;
+//                    	}
 
                         //Log.i("onReceive", "Found device "+name );
-                    	BluetoothDevice bd = launchPads[i].device;
-                    	s = bd.getName();
-                        if (launchPads[i].rssi > 0 ) {
-                        	s += " -" + launchPads[i].rssi + "dB";
-                        } else {
-                        	s += " not found";
-                        }     		
+//                    	BluetoothDevice bd = launchPads[i].device;
+//                    	s = bd.getName();
+//                        if (launchPads[i].rssi > 0 ) {
+//                        	s += " -" + launchPads[i].rssi + "dB";
+//                        } else {
+//                        	s += " not found";
+//                        }     		
 //                        adapter.add(s);
                 	}
-                    min = find_closest(r);
-                    myview.setYPos(fingerprints[min].x);
+//                    min = find_closest(r);
+//                    myview.setYPos(fingerprints[min].x);
 //                    s = "Location: " + fingerprints[min].x + " units";
 //                    adapter.add(s);
 //                    
