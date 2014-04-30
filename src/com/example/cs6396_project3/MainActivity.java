@@ -39,6 +39,8 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -94,6 +96,7 @@ public class MainActivity extends Activity {
     	Vector<RssiEntry> rssiVec;
     	// short rssi;
     	BluetoothDevice device;
+    	BluetoothGatt gatt;
     	BluetoothSerialService BlueSS;
     	boolean connected;
        	public LaunchPad( String a, int _x, int _y   ) {
@@ -104,6 +107,7 @@ public class MainActivity extends Activity {
     		rssiVec = new Vector<RssiEntry>();
     		device = BA.getRemoteDevice( a );
     	    BlueSS = null;
+    	    gatt = null;
     	    connected = false;
     	}
     }
@@ -284,6 +288,10 @@ public class MainActivity extends Activity {
 //                }    	
 //		    }
 //		  }).start();
+	    BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+	    	
+	    };
+	    
         mReceiver = new BroadcastReceiver() {
             @Override
 			public void onReceive(Context context, Intent intent ) {
@@ -323,6 +331,9 @@ public class MainActivity extends Activity {
 
                     	// Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
                     	if ( launchPads[i].address.equals( device.getAddress() ) ) {
+                    		if ( launchPads[i].gatt == null ) {
+                    			launchPads[i].gatt = device.connectGatt(this,  true,  gattCallback );
+                    		}
                     		RssiEntry ent = new RssiEntry( rssi, time );
                     		if ( i == 4 && !launchPads[i].connected ) { 
                     			launchPads[i].BlueSS = new BluetoothSerialService();
