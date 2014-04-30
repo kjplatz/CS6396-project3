@@ -69,6 +69,9 @@ public class MainActivity extends Activity {
     
     private MyView myview;
     
+    private int opened_ticks = 0;
+    private int yPos;
+    
     private class RssiEntry {
     	int dB;
     	long time;
@@ -91,7 +94,7 @@ public class MainActivity extends Activity {
     	Vector<RssiEntry> rssiVec;
     	// short rssi;
     	BluetoothDevice device;
-    	//BluetoothSerialService BlueSS;
+    	BluetoothSerialService BlueSS;
     	boolean connected;
        	public LaunchPad( String a, int _x, int _y   ) {
     		address = a;
@@ -100,7 +103,7 @@ public class MainActivity extends Activity {
     		rssi = 0;
     		rssiVec = new Vector<RssiEntry>();
     		device = BA.getRemoteDevice( a );
-    	    //BlueSS = new BluetoothSerialService();
+    	    BlueSS = null;
     	    connected = false;
     	}
     }
@@ -184,9 +187,7 @@ public class MainActivity extends Activity {
 	    launchPads[3] = new LaunchPad( "EC:FE:7E:11:02:DD", 77, 1 );     // BlueRadios1102DD
 	    launchPads[4] = new LaunchPad( "EC:FE:7E:11:03:2C", 103, 12 );     // BlueRadios11032C
       
-      
-      //For some reason when we added fingerprints[6] the app crashed. Maybe because of some index problem?? Please check.
-	    fingerprints = new FingerPrint[22];
+  	    fingerprints = new FingerPrint[22];
 	    fingerprints[0] = new FingerPrint( 0, 76.4f, 81.222f, 73.0833f, 71.25f, 56.66f );
 	    fingerprints[1] = new FingerPrint( 12, 75f, 83.13f, 73.32f, 70.608f, 55.2f);
 	    fingerprints[2] = new FingerPrint( 16, 69.637f, 68.74286f, 63.9838f, 70.5169f, 74.36638f);
@@ -241,10 +242,32 @@ public class MainActivity extends Activity {
 	    			r[i] = launchPads[i].rssi;
 	    		}
 	    		
-	    		
-	    		//Log.i("PositionUpdate", ""+r );
+	    		String s = "";
+	    		for( LaunchPad lp : launchPads ) {
+	    			s += lp.rssi + "/";
+	    		}
+
 	    		int min = find_closest( r );
-	    		myview.setYPos( min );
+	    		yPos = fingerprints[min].x;
+	    		myview.setYPos( yPos );
+	    		Log.i("PositionUpdate", ""+s+" pos = " + yPos);
+	    		
+	    		if ( launchPads[4].BlueSS == null || 
+	    			 launchPads[4].BlueSS.getState() != BluetoothSerialService.STATE_CONNECTED ) return;
+	    		if ( opened_ticks > 0 ) {
+	    			if ( --opened_ticks == 0 ) {
+	    				launchPads[4].BlueSS.write( "put 2 0\n".getBytes() );
+	    				opened_ticks = -100;
+	    			}
+	    			Log.i( "ticks", ""+opened_ticks );
+	    		} else if ( opened_ticks < 0 ) {
+	    			opened_ticks++;
+	    			Log.i( "ticks", ""+opened_ticks );
+	    		} else if ( yPos < 30 ) {
+	    			opened_ticks = 10;
+	    			launchPads[4].BlueSS.write( "put 2 100\n".getBytes() );
+	    			Log.i("open",  "Opening....");
+	    		}
 	    	}
 	    };
 	    
@@ -273,7 +296,7 @@ public class MainActivity extends Activity {
                     String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
                     if ( name == null ) name = "(null)";
                     short rssi =  (short) Math.abs( intent.getShortExtra(BluetoothDevice.EXTRA_RSSI, (short)0) );
-                    Log.i( "onReceive",  name + " " + rssi + " dB");
+//                    Log.i( "onReceive",  name + " " + rssi + " dB");
                     float[] r = new float[launchPads.length];
 //                    
 //                    ListView listView = (ListView)findViewById(R.id.listview);
@@ -301,9 +324,14 @@ public class MainActivity extends Activity {
                     	// Log.i( "seeking", "["+i+"]"+device.getAddress()+"  Checking against "+launchPads[i].address );
                     	if ( launchPads[i].address.equals( device.getAddress() ) ) {
                     		RssiEntry ent = new RssiEntry( rssi, time );
+                    		if ( i == 4 && !launchPads[i].connected ) { 
+                    			launchPads[i].BlueSS = new BluetoothSerialService();
+                    			launchPads[i].BlueSS.connect( device );
+                    			launchPads[i].connected = true;
+                    		}
 //                    		dB += rssi;
 //                    		count++;
-                    		launchPads[i].rssiVec.add( ent );
+                    		launchPads[i].rssiVec.add( ent ); 
                     		
 //                    		if ( launchPads[i].connected == false ) {
 //                    		    launchPads[i].device = device;
