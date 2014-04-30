@@ -65,7 +65,7 @@ public class MainActivity extends Activity {
     private BroadcastReceiver mReceiver;
     private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
         
-    private static final int maxTime = 30 * 1000;
+    private static final int maxTime = 15 * 1000;
     
     private MyView myview;
     
