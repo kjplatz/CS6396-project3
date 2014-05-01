@@ -65,13 +65,15 @@ public class MainActivity extends Activity {
     private BroadcastReceiver mReceiver;
     private BluetoothAdapter BA = BluetoothAdapter.getDefaultAdapter();
         
-    private static final int maxTime = 15 * 1000;
+    private static final int maxTime = 12 * 1000;
     
     private MyView myview;
     
     private int opened_ticks = 0;
     private int yPos;
-    private int current_spot;
+    private int current_spot = -1;
+    
+    private Vector<Integer> position_vec;
     
     private class RssiEntry {
     	int dB;
@@ -166,19 +168,22 @@ public class MainActivity extends Activity {
     }
     
     private int find_closest_to( int last, float[] rssi ) {
-        float closest_dist = 0;
+        float closest_dist = find_distance(last,rssi);
         float new_dist = find_distance( last, rssi );
         int closest = last;
         int begin = (last < 1 ? 0 : last - 1);
-        int end = (last >= fingerprints.length ? fingerprints.length-1 : last+1 );
+        int end = (last >= fingerprints.length-2 ? fingerprints.length-1 : last+1 );
         
-        for( int i=begin; i<end; i++ ) {
+        for( int i=begin; i<=end; i++ ) {
         	new_dist = find_distance( i, rssi );
+        	
         	if ( new_dist < closest_dist ) {
         		closest = i;
         		closest_dist = new_dist;
         	}
+//        	Log.i("find_closest_to", ""+i+ " " + new_dist + "(closest "+closest+":"+closest_dist+")" );
         }
+//        Log.i( "find_closest_to", "returns "+closest );
     			
     	return closest;
     }
@@ -191,6 +196,8 @@ public class MainActivity extends Activity {
 
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
+        
+        position_vec = new Vector<Integer>();
         
 		super.onCreate(savedInstanceState);
 		setContentView( myview = new MyView(this, dm) );
@@ -266,35 +273,45 @@ public class MainActivity extends Activity {
 	    			s += lp.rssi + "/";
 	    		}
 
-	    		if ( current_spot == 0 ) {
+	    		if ( current_spot < 0 ) {
 	    			current_spot = find_closest( r );
 	    		} else {
 	    		    current_spot = find_closest_to( current_spot, r );
 	    		}
-	    		yPos = fingerprints[current_spot].x;
+	    		
+	    		if ( current_spot > 0 && current_spot < fingerprints.length -1 ) {
+	    			if ( find_distance( current_spot-1, r ) < find_distance(current_spot+1,r) )  {
+	    				yPos = (fingerprints[current_spot-1].x + fingerprints[current_spot].x)/2;
+	    			} else {
+	    				yPos = (fingerprints[current_spot].x + fingerprints[current_spot+1].x)/2;
+	    			}
+	    		} else {
+//	    		Log.i( "current_spot", "Current spot is "+current_spot );
+	    		    yPos = fingerprints[current_spot].x;
+	    		}
 	    		myview.setYPos( yPos );
-	    		Log.i("PositionUpdate", ""+s+" pos = " + yPos);
+	    		Log.i("PositionUpdate", ""+s+" pos = " + yPos + "["+current_spot+"]");
 	    		
 	    		if ( launchPads[4].BlueSS == null || 
 	    			 launchPads[4].BlueSS.getState() != BluetoothSerialService.STATE_CONNECTED ) return;
 	    		if ( opened_ticks > 0 ) {
 	    			if ( --opened_ticks == 0 ) {
 	    				launchPads[4].BlueSS.write( "put 2 0\n".getBytes() );
-	    				opened_ticks = -100;
+	    				opened_ticks = -50;
 	    			}
 	    			Log.i( "ticks", ""+opened_ticks );
 	    		} else if ( opened_ticks < 0 ) {
 	    			opened_ticks++;
 	    			Log.i( "ticks", ""+opened_ticks );
-	    		} else if ( yPos < 30 ) {
-	    			opened_ticks = 10;
+	    		} else if ( yPos <= 16 ) {
+	    			opened_ticks = 5;
 	    			launchPads[4].BlueSS.write( "put 2 100\n".getBytes() );
 	    			Log.i("open",  "Opening....");
 	    		}
 	    	}
 	    };
 	    
-	    updateHandler.postDelayed(updateRunnable, 5000);
+	    updateHandler.postDelayed(updateRunnable, 10000);
 //		new Thread(new Runnable() {
 //		    public void run() {
 //                while(true) {
@@ -458,7 +475,13 @@ public class MainActivity extends Activity {
 	
 	protected void onStop() {
 		super.onStop();
-		unregisterReceiver( mReceiver );
+//		unregisterReceiver( mReceiver );
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		unregisterReceiver(mReceiver);
 	}
 
 }
