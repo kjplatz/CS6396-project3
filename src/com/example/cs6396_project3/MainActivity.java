@@ -71,6 +71,7 @@ public class MainActivity extends Activity {
     
     private int opened_ticks = 0;
     private int yPos;
+    private int current_spot;
     
     private class RssiEntry {
     	int dB;
@@ -164,6 +165,24 @@ public class MainActivity extends Activity {
         return closest;	
     }
     
+    private int find_closest_to( int last, float[] rssi ) {
+        float closest_dist = 0;
+        float new_dist = find_distance( last, rssi );
+        int closest = last;
+        int begin = (last < 1 ? 0 : last - 1);
+        int end = (last >= fingerprints.length ? fingerprints.length-1 : last+1 );
+        
+        for( int i=begin; i<end; i++ ) {
+        	new_dist = find_distance( i, rssi );
+        	if ( new_dist < closest_dist ) {
+        		closest = i;
+        		closest_dist = new_dist;
+        	}
+        }
+    			
+    	return closest;
+    }
+    
     private FingerPrint[] fingerprints;
 	
 	@Override
@@ -222,7 +241,7 @@ public class MainActivity extends Activity {
 	    	@Override
 	    	public void run() {
 	    		BluetoothAdapter.getDefaultAdapter().startDiscovery();
-	    		updateHandler.postDelayed( this, 500 );
+	    		updateHandler.postDelayed( this, 1000 );
 	    		long time = System.currentTimeMillis();
 	    		float[] r = new float[launchPads.length];
 	    		
@@ -247,8 +266,12 @@ public class MainActivity extends Activity {
 	    			s += lp.rssi + "/";
 	    		}
 
-	    		int min = find_closest( r );
-	    		yPos = fingerprints[min].x;
+	    		if ( current_spot == 0 ) {
+	    			current_spot = find_closest( r );
+	    		} else {
+	    		    current_spot = find_closest_to( current_spot, r );
+	    		}
+	    		yPos = fingerprints[current_spot].x;
 	    		myview.setYPos( yPos );
 	    		Log.i("PositionUpdate", ""+s+" pos = " + yPos);
 	    		
@@ -271,7 +294,7 @@ public class MainActivity extends Activity {
 	    	}
 	    };
 	    
-	    updateHandler.postDelayed(updateRunnable, 500);
+	    updateHandler.postDelayed(updateRunnable, 5000);
 //		new Thread(new Runnable() {
 //		    public void run() {
 //                while(true) {
